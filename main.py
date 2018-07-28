@@ -27,110 +27,59 @@ N_VERTS = 1258
 N_FACES = 2492
 N_VT    = 1339
 
-class M3x3:
-    def __init__(self, m11, m21, m31,
-                       m12, m22, m32,
-                       m13, m23, m33):
-        self.m11 = float(m11)
-        self.m21 = float(m21)
-        self.m31 = float(m31)
-
-        self.m12 = float(m12)
-        self.m22 = float(m22)
-        self.m32 = float(m32)
-
-        self.m13 = float(m13)
-        self.m23 = float(m23)
-        self.m33 = float(m33)
-
-    def __repr__(self):
-        return str((self.m11, self.m12, self.m13)) + "\n" + \
-               str((self.m12, self.m22, self.m32)) + "\n" + \
-               str((self.m13, self.m23, self.m33)) + "\n"
-
-class M4x4:
-    def __init__(self, m11, m21, m31, m41,
-                       m12, m22, m32, m42,
-                       m13, m23, m33, m43,
-                       m14, m24, m34, m44):
-
-        self.m11 = float(m11)
-        self.m21 = float(m21)
-        self.m31 = float(m31)
-        self.m41 = float(m41)
-
-        self.m12 = float(m12)
-        self.m22 = float(m22)
-        self.m32 = float(m32)
-        self.m42 = float(m42)
-
-        self.m13 = float(m13)
-        self.m23 = float(m23)
-        self.m33 = float(m33)
-        self.m43 = float(m43)
-
-        self.m14 = float(m14)
-        self.m24 = float(m24)
-        self.m34 = float(m34)
-        self.m44 = float(m44)
-
-    def __repr__(self):
-        return str((self.m11, self.m12, self.m13, self.m41)) + "\n" + \
-               str((self.m12, self.m22, self.m32, self.m42)) + "\n" + \
-               str((self.m13, self.m23, self.m33, self.m43)) + "\n" + \
-               str((self.m14, self.m24, self.m34, self.m44)) + "\n"
+#m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
+#m3x3 = [m11, m21, m31, m12, m22, m32, m13, m23, m33]
+#m3x3 = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+#map(float, m3x3)
 
 def m3x3_mult(m, v, w):
-    vx = m.m11 * v.x + m.m21 * v.y + m.m31 * w
-    vy = m.m12 * v.x + m.m22 * v.y + m.m32 * w
-    #vw = m.m13 * v.x + m.m23 * v.y + m.m33 * w
-    return Vec3(vx, vy)
+    m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
+    vx = m[m11] * v[0] + m[m21] * v[1] + m[m31] * w
+    vy = m[m12] * v[0] + m[m22] * v[1] + m[m32] * w
+    return map(float, [vx, vy, 0])
 
 def m3x3_mult_with_w1(m, v):
     return m3x3_mult(m, v, 1.0)
 
 def m3x3_concatenate(a, b):
-    m = M3x3(0, 0, 0, 0, 0, 0, 0, 0, 0)
+    m = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
+    m[m11] = a[m11] * b[m11] + a[m21] * b[m12] + a[m31] * b[m13]
+    m[m21] = a[m11] * b[m21] + a[m21] * b[m22] + a[m31] * b[m23]
+    m[m31] = a[m11] * b[m31] + a[m21] * b[m32] + a[m31] * b[m33]
 
-    m.m11 = a.m11 * b.m11 + a.m21 * b.m12 + a.m31 * b.m13
-    m.m21 = a.m11 * b.m21 + a.m21 * b.m22 + a.m31 * b.m23
-    m.m31 = a.m11 * b.m31 + a.m21 * b.m32 + a.m31 * b.m33
+    m[m12] = a[m12] * b[m11] + a[m22] * b[m12] + a[m32] * b[m13]
+    m[m22] = a[m12] * b[m21] + a[m22] * b[m22] + a[m32] * b[m23]
+    m[m32] = a[m12] * b[m31] + a[m22] * b[m32] + a[m32] * b[m33]
 
-    m.m12 = a.m12 * b.m11 + a.m22 * b.m12 + a.m32 * b.m13
-    m.m22 = a.m12 * b.m21 + a.m22 * b.m22 + a.m32 * b.m23
-    m.m32 = a.m12 * b.m31 + a.m22 * b.m32 + a.m32 * b.m33
+    m[m13] = a[m13] * b[m11] + a[m23] * b[m12] + a[m33] * b[m13]
+    m[m23] = a[m13] * b[m21] + a[m23] * b[m22] + a[m33] * b[m23]
+    m[m33] = a[m13] * b[m31] + a[m23] * b[m32] + a[m33] * b[m33]
 
-    m.m13 = a.m13 * b.m11 + a.m23 * b.m12 + a.m33 * b.m13
-    m.m23 = a.m13 * b.m21 + a.m23 * b.m22 + a.m33 * b.m23
-    m.m33 = a.m13 * b.m31 + a.m23 * b.m32 + a.m33 * b.m33
-
-    return m
+    return map(float, m)
 
 def m3x3_translate(tx, ty):
-    m = M3x3(1, 0, tx, 0, 1, ty, 0, 0, 1)
-    return m
+    return map(float, [1, 0, tx, 0, 1, ty, 0, 0, 1])
 
 def m3x3_rotate(theta):
     cost = math.cos(theta)
     sint = math.sin(theta)
-    m = M3x3(cost, -sint, 0, sint, cost, 0, 0, 0, 1)
-    return m
+    return map(float, [cost, -sint, 0, sint, cost, 0, 0, 0, 1])
 
 def m3x3_scale(sx, sy):
-    m = M3x3(sx, 0, 0, 0, sy, 0, 0, 0, 1)
-    return m
+    return map(float, [sx, 0, 0, 0, sy, 0, 0, 0, 1])
 
 def m3x3_identity():
-    return M3x3(1,0,0, 0,1,0, 0,0,1)
+    return map(float, [1,0,0, 0,1,0, 0,0,1])
 
 def m3x3_reflect_about_origin():
-    return M3x3(-1,0,0, 0,-1,0, 0,0,1)
+    return [-1,0,0, 0,-1,0, 0,0,1]
 
 def m3x3_reflect_about_x_axis():
-    return M3x3(1,0,0, 0,-1,0, 0,0,1)
+    return [1,0,0, 0,-1,0, 0,0,1]
 
 def m3x3_reflect_about_y_axis():
-    return M3x3(-1,0,0, 0,1,0, 0,0,1)
+    return [-1,0,0, 0,1,0, 0,0,1]
 
 def set_pixel(data, x, y, color):
     s = (x + y * IMG_W) * IMG_BPP
@@ -213,44 +162,44 @@ def triangle(data, v0, v1, v2, color):
 
 def barycentric(a, b, c, p):
     try:
-        u = float(((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / ((b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)))
+        u = float(((b[1] - c[1]) * (p[0] - c[0]) + (c[0] - b[0]) * (p[1] - c[1])) / ((b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])))
     except ZeroDivisionError:
         print "exception got triggered"
-        u = float((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y))
+        u = float((b[1] - c[1]) * (p[0] - c[0]) + (c[0] - b[0]) * (p[1] - c[1]))
     try:
-        v = float(((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / ((b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)))
+        v = float(((c[1] - a[1]) * (p[0] - c[0]) + (a[0] - c[0]) * (p[1] - c[1])) / ((b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])))
     except ZeroDivisionError:
         print "exception got triggered"
-        v = float((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y))
+        v = float((c[1] - a[1]) * (p[0] - c[0]) + (a[0] - c[0]) * (p[1] - c[1]))
     w = 1.0 - u - v
     return (u, v, w)
 
 def barycentric_raster_triangle(data, p0, p1, p2):
-    if p0.y > p1.y: p0, p1 = p1, p0
-    if p0.y > p2.y: p0, p2 = p2, p0
-    if p1.y > p2.y: p1, p2 = p2, p1
+    if p0[1] > p1[1]: p0, p1 = p1, p0
+    if p0[1] > p2[1]: p0, p2 = p2, p0
+    if p1[1] > p2[1]: p1, p2 = p2, p1
 
-    minx = min(p0.x, min(p1.x, p2.x))
-    miny = min(p0.y, min(p1.y, p2.y))
-    maxx = max(p0.x, max(p1.x, p2.x))
-    maxy = max(p0.y, max(p1.y, p2.y))
+    minx = min(p0[0], min(p1[0], p2[0]))
+    miny = min(p0[1], min(p1[1], p2[1]))
+    maxx = max(p0[0], max(p1[0], p2[0]))
+    maxy = max(p0[1], max(p1[1], p2[1]))
 
     minx = max(minx, 0)
     miny = max(miny, 0)
     maxx = min(maxx, IMG_W-1)
     maxy = min(maxy, IMG_H-1)
 
-    p = Vec3(minx, miny)
-    while (p.y < maxy):
+    p = [minx, miny, 0]
+    while (p[1] < maxy):
         # NOTE!  when copying C for loops, we have to think about the init. phase in our Python loops as well.
-        if (p.x == maxx): p.x = minx
-        while (p.x < maxx):
+        if (p[0] == maxx): p[0] = minx
+        while (p[0] < maxx):
             lambda1, lambda2, lambda3 = barycentric(p0, p1, p2, p)
             if ((lambda1 >= 0.0) and (lambda2 >= 0.0) and (lambda3 >= 0.0)):
                 c = (chr(int(lambda1 * 255)), chr(int(lambda2 * 255)), chr(int(lambda3 * 255)))
-                set_pixel(data, int(p.x), int(p.y), c)
-            p.x += 1
-        p.y += 1
+                set_pixel(data, int(p[0]), int(p[1]), c)
+            p[0] += 1
+        p[1] += 1
 
 def fcross(a, b):
     cross = [0, 0, 0]
@@ -270,7 +219,9 @@ def bilinear(tx, ty, c00, c10, c01, c11):
     return lerp(a, ty, b)
 
 def edge(a, b, c):
-    return (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0])
+    a0 = a[0]
+    a1 = a[1]
+    return (b[0] - a0)*(c[1] - a1) - (b[1] - a1)*(c[0] - a0)
 
 def degrees_to_radiants(d):
     return (d * math.pi) / 180
@@ -278,33 +229,27 @@ def degrees_to_radiants(d):
 def radiants_to_degrees(r):
     return (r * 180) / math.pi
 
-# NOTE
-# ~~~~
-# this might have some corner cases where it is not working properly
-# it would be nice to see it in a live action scenario
-# maybe we could create a list of rotating images?
-# ~~~~
-
 def show_bounding_box(data, t):
-    line(data, t[0].x, t[0].y, t[0].x, t[1].y, WHITE)
-    line(data, t[0].x, t[1].y, t[2].x, t[1].y, WHITE)
-    line(data, t[2].x, t[1].y, t[2].x, t[2].y, WHITE)
-    line(data, t[0].x, t[0].y, t[2].x, t[2].y, WHITE)
+    line(data, t[0][0], t[0][1], t[0][0], t[1][1], WHITE)
+    line(data, t[0][0], t[1][1], t[2][0], t[1][1], WHITE)
+    line(data, t[2][0], t[1][1], t[2][0], t[2][1], WHITE)
+    line(data, t[0][0], t[0][1], t[2][0], t[2][1], WHITE)
 
 def find_centroid(t):
-    tx = t[0].x + t[1].x + t[2].x
-    ty = t[0].y + t[1].y + t[2].y
+    tx = t[0][0] + t[1][0] + t[2][0]
+    ty = t[0][1] + t[1][1] + t[2][1]
     return (int(tx / 3), int(ty / 3))
 
 def write_tga(filename, data):
-        HEADER = struct.pack("<3b2hb4h2b", 0, 0, IMG_DSC_NON_RLE, 0, 0, 0, 0, 0, IMG_W, IMG_H, 24, 0)
-        FOOTER = bytearray(8) + bytearray(b"TRUEVISION-.xFILE.") + bytearray(1)
-        f = open(filename, "wb")
-        f.write(HEADER)
-        f.write("".join(data))
-        f.write(FOOTER)
-        f.close()
+    HEADER = struct.pack("<3b2hb4h2b", 0, 0, IMG_DSC_NON_RLE, 0, 0, 0, 0, 0, IMG_W, IMG_H, 24, 0)
+    FOOTER = bytearray(8) + bytearray(b"TRUEVISION-.xFILE.") + bytearray(1)
+    f = open(filename, "wb")
+    f.write(HEADER)
+    f.write("".join(data))
+    f.write(FOOTER)
+    f.close()
 
+# NOTE! BYTE_ARRAYS ARE BAD
 def load_non_rle_texture():
     f = open("obj/non_rle_texture.tga", "rb")
     f.seek(18,0)
@@ -451,7 +396,7 @@ def main():
     parse_obj(OBJ_DATA)
 
     #texture = load_non_rle_texture()
-    #t = [Vec3(200,100), Vec3(600,600), Vec3(800,100)]
+    t = [[100,300,0], [600,600,0], [800,100,0]]
     #centroid = find_centroid(t)
     #m = m3x3_identity()
     #m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))
@@ -460,10 +405,10 @@ def main():
     #t[0] = m3x3_mult_with_w1(m, t[0])
     #t[1] = m3x3_mult_with_w1(m, t[1])
     #t[2] = m3x3_mult_with_w1(m, t[2])
-    #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
+    construct_model(DATA, ZBUFFER, OBJ_DATA)
+    barycentric_raster_triangle(DATA, t[0], t[1], t[2])
     #show_bounding_box(DATA, t)
 
-    construct_model(DATA, ZBUFFER, OBJ_DATA)
 
     # TODO: NOT IMPLEMENTED!  #RLE_DATA = rle_encode(DATA[0:(int(IMG_SIZE/2))])
     write_tga("test_rle.tga", DATA)

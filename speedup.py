@@ -28,7 +28,7 @@ class Foo:
     def __repr__(self):
         return str((self.x, self.y, self.z))
 
-TIMES = 999999
+TIMES = 1999999
 
 def tuple_edge():
     a = tuple((2,7,2))

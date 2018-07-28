@@ -27,20 +27,6 @@ N_VERTS = 1258
 N_FACES = 2492
 N_VT    = 1339
 
-# TODO: functions that must GO!
-# - fcross
-# - edge
-# - set pixel
-
-class Vec3:
-    def __init__(self, x, y, z=0):
-        self.x = int(x)
-        self.y = int(y)
-        self.z = int(z)
-
-    def __repr__(self):
-        return str((self.x, self.y, self.z))
-
 class M3x3:
     def __init__(self, m11, m21, m31,
                        m12, m22, m32,
@@ -171,50 +157,55 @@ def line(data, x0, y0, x1, y1, color):
             y0 += sy
 
 def triangle(data, v0, v1, v2, color):
-    v4 = Vec3(0, 0)
+    v4 = [0,0,0]
 
-    if v0.y > v1.y: v0, v1 = v1, v0
-    if v0.y > v2.y: v0, v2 = v2, v0
-    if v1.y > v2.y: v1, v2 = v2, v1
+    X, Y, Z = 0, 1, 2
 
-    try:
-        t = (v1.y - v0.y) / (v2.y - v0.y)
-    except ZeroDivisionError:
-        t = (v1.y - v0.y)
-
-    v4.x = v0.x + t * (v2.x - v0.x)
-    v4.y = v1.y
+    if v0[Y] > v1[Y]: v0, v1 = v1, v0
+    if v0[Y] > v2[Y]: v0, v2 = v2, v0
+    if v1[Y] > v2[Y]: v1, v2 = v2, v1
 
     try:
-        m1 = (v2.x - v0.x) / (v2.y - v0.y)
-        m2 = (v1.x - v0.x) / (v1.y - v0.y)
+        t = (v1[Y] - v0[Y]) / (v2[Y] - v0[Y])
     except ZeroDivisionError:
-        m1 = (v2.x - v0.x)
-        m2 = (v1.x - v0.x)
+        print "exception got triggered"
+        t = (v1[Y] - v0[Y])
 
-    curra = v4.x
-    currb = v1.x
+    v4[X] = v0[X] + t * (v2[X] - v0[X])
+    v4[Y] = v1[Y]
 
-    i = v4.y
-    while (i > v0.y):
+    try:
+        m1 = (v2[X] - v0[X]) / (v2[Y] - v0[Y])
+        m2 = (v1[X] - v0[X]) / (v1[Y] - v0[Y])
+    except ZeroDivisionError:
+        print "exception got triggered"
+        m1 = (v2[X] - v0[X])
+        m2 = (v1[X] - v0[X])
+
+    curra = v4[X]
+    currb = v1[X]
+
+    i = v4[Y]
+    while (i > v0[Y]):
         line(data, int(curra), i, int(currb), i, color)
         curra -= m1
         currb -= m2
         i -= 1
 
     try:
-        m1 = (v2.x - v4.x) / (v2.y - v4.y)
-        m2 = (v2.x - v1.x) / (v2.y - v1.y)
+        m1 = (v2[X] - v4[X]) / (v2[Y] - v4[Y])
+        m2 = (v2[X] - v1[X]) / (v2[Y] - v1[Y])
     except ZeroDivisionError:
-        m1 = (v2.x - v4.x)
-        m2 = (v2.x - v1.x)
+        print "exception got triggered"
+        m1 = (v2[X] - v4[X])
+        m2 = (v2[X] - v1[X])
 
 
-    curra = v4.x
-    currb = v1.x
+    curra = v4[X]
+    currb = v1[X]
 
-    i = v4.y
-    while (i < v2.y):
+    i = v4[Y]
+    while (i < v2[Y]):
         line(data, int(curra), i, int(currb), i, color)
         curra += m1
         currb += m2
@@ -224,10 +215,12 @@ def barycentric(a, b, c, p):
     try:
         u = float(((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / ((b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)))
     except ZeroDivisionError:
+        print "exception got triggered"
         u = float((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y))
     try:
         v = float(((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / ((b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)))
     except ZeroDivisionError:
+        print "exception got triggered"
         v = float((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y))
     w = 1.0 - u - v
     return (u, v, w)
@@ -260,10 +253,11 @@ def barycentric_raster_triangle(data, p0, p1, p2):
         p.y += 1
 
 def fcross(a, b):
-    cross = Vec3(0, 0, 0)
-    cross.x = float(a.y * b.z - a.z * b.y)
-    cross.y = float(a.z * b.x - a.x * b.z)
-    cross.z = float(a.x * b.y - a.y * b.x)
+    cross = [0, 0, 0]
+    X, Y, Z = 0, 1, 2
+    cross[0] = float(a[Y] * b[Z] - a[Z] * b[Y])
+    cross[1] = float(a[Z] * b[X] - a[X] * b[Z])
+    cross[2] = float(a[X] * b[Y] - a[Y] * b[X])
     return cross
 
 def lerp(a, t, b):
@@ -276,7 +270,7 @@ def bilinear(tx, ty, c00, c10, c01, c11):
     return lerp(a, ty, b)
 
 def edge(a, b, c):
-    return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)
+    return (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0])
 
 def degrees_to_radiants(d):
     return (d * math.pi) / 180
@@ -290,8 +284,6 @@ def radiants_to_degrees(r):
 # it would be nice to see it in a live action scenario
 # maybe we could create a list of rotating images?
 # ~~~~
-
-# NOTE: bytearrays ARE BAD ~!
 
 def show_bounding_box(data, t):
     line(data, t[0].x, t[0].y, t[0].x, t[1].y, WHITE)
@@ -359,12 +351,14 @@ def wireframe_render_model(data, objdata, color=WHITE):
         line(data, p2.x, p2.y, p0.x, p0.y, color)
 
 def construct_model(data, zbuffer, objdata, texture=None):
-    p0 = Vec3(0, 0, 0)
-    p1 = Vec3(0, 0, 0)
-    p2 = Vec3(0, 0, 0)
+    p0 = [0, 0, 0]
+    p1 = [0, 0, 0]
+    p2 = [0, 0, 0]
 
-    d1 = Vec3(0, 0, 0)
-    d2 = Vec3(0, 0, 0)
+    d1 = [0, 0, 0]
+    d2 = [0, 0, 0]
+
+    X, Y, Z = 0, 1, 2
 
     for i in xrange(N_FACES):
         v0 = objdata['v'][objdata['f'][i][0]-1]
@@ -383,147 +377,91 @@ def construct_model(data, zbuffer, objdata, texture=None):
         #uv1 = Vec3(vt1[0], vt1[1])
         #uv2 = Vec3(vt2[0], vt2[1])
 
-        p0.x = int((v0[0] + 1) * IMG_W/2)
-        p0.y = int((v0[1] + 1) * IMG_H/2)
-        p1.x = int((v1[0] + 1) * IMG_W/2)
-        p1.y = int((v1[1] + 1) * IMG_H/2)
-        p2.x = int((v2[0] + 1) * IMG_W/2)
-        p2.y = int((v2[1] + 1) * IMG_H/2)
+        p0[0] = int((v0[0] + 1) * IMG_W/2)
+        p0[1] = int((v0[1] + 1) * IMG_H/2)
+        p1[0] = int((v1[0] + 1) * IMG_W/2)
+        p1[1] = int((v1[1] + 1) * IMG_H/2)
+        p2[0] = int((v2[0] + 1) * IMG_W/2)
+        p2[1] = int((v2[1] + 1) * IMG_H/2)
 
         # NOTE: we should have the vertex normal information in our obj.
         # I think that we don't need to calculate everything ourselves. We could just parse for that data.
-        d1.x = v1[0] - v0[0]
-        d1.y = v1[1] - v0[1]
-        d1.z = v1[2] - v0[2]
+        d1[0] = v1[0] - v0[0]
+        d1[1] = v1[1] - v0[1]
+        d1[2] = v1[2] - v0[2]
 
-        d2.x = v2[0] - v0[0]
-        d2.y = v2[1] - v0[1]
-        d2.z = v2[2] - v0[2]
+        d2[0] = v2[0] - v0[0]
+        d2[1] = v2[1] - v0[1]
+        d2[2] = v2[2] - v0[2]
 
         normal = fcross(d1, d2)
 
-        dist = math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z)
+        dist = math.sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2])
 
-        normal.x = normal.x / dist
-        normal.y = normal.y / dist
-        normal.z = normal.z / dist
+        normal[0] = normal[0] / dist
+        normal[1] = normal[1] / dist
+        normal[2] = normal[2] / dist
 
-        direction = (normal.x * 0) + (normal.y * 0) + (normal.z * 1)
+        direction = (normal[0] * 0) + (normal[1] * 0) + (normal[2] * 1)
 
         if (direction > 0):
 
-            minx = min(p0.x, min(p1.x, p2.x))
-            miny = min(p0.y, min(p1.y, p2.y))
-            maxx = max(p0.x, max(p1.x, p2.x))
-            maxy = max(p0.y, max(p1.y, p2.y))
+            minx = min(p0[X], min(p1[X], p2[X]))
+            miny = min(p0[Y], min(p1[Y], p2[Y]))
+            maxx = max(p0[X], max(p1[X], p2[X]))
+            maxy = max(p0[Y], max(p1[Y], p2[Y]))
 
             minx = max(minx, 0)
             miny = max(miny, 0)
             maxx = min(maxx, IMG_W-1)
             maxy = min(maxy, IMG_H-1)
 
-            p = Vec3(minx, miny)
-            while (p.y < maxy):
+            p = [minx, miny, 0]
+            while (p[Y] < maxy):
                 # NOTE!  when copying C for loops, we have to think about the init. phase in our Python loops as well.
-                if (p.x == maxx): p.x = minx
-                while (p.x < maxx):
+                if (p[X] == maxx): p[X] = minx
+                while (p[X] < maxx):
                     w0 = edge(p1, p2, p)
                     w1 = edge(p2, p0, p)
                     w2 = edge(p0, p1, p)
 
                     if ((w0 >= 0) and (w1 >= 0) and (w2 >= 0)):
-                        p.z = 0.0
-                        p.z += v0[2] * p.x + p.y * 3
-                        p.z += v1[2] * p.x + p.y * 3
-                        p.z += v2[2] * p.x + p.y * 3
+                        p[Z] = 0.0
+                        p[Z] += v0[2] * p[X] + p[Y] * 3
+                        p[Z] += v1[2] * p[X] + p[Y] * 3
+                        p[Z] += v2[2] * p[X] + p[Y] * 3
 
-                        if (zbuffer[p.x + p.y * IMG_W] < p.z):
-                            zbuffer[p.x + p.y * IMG_W] = p.z
-                            bgr = (chr(int(direction * 255)), chr(int(direction * 255)), chr(int(direction * 255)))
-                            set_pixel(data, p.x, p.y, bgr)
-                    p.x += 1
-                p.y += 1
-
-def rle_encode(data):
-    run = 1
-    byte = 0
-    maxrun = 128
-    rle_buffer = bytearray()
-    rle_current_byte = 0
-    while byte < IMG_SIZE:
-        while byte < IMG_SIZE and run < maxrun and data[byte:byte+3] == data[byte+3:byte+3+3]:
-            byte += 3
-            if data[byte:byte+3] == data[byte+3:byte+3+3]:
-                run += 1
-            if data[byte:byte+3] != data[byte+3:byte+3+3]:
-                byte += 3
-                run ^= 1 << 7
-                rle_buffer += bytearray(5)
-                rle_buffer[rle_current_byte] = run
-                rle_buffer[rle_current_byte+1] = data[byte-3]
-                rle_buffer[rle_current_byte+2] = data[byte-2]
-                rle_buffer[rle_current_byte+3] = data[byte-1]
-                run = 1
-        if data[byte:byte+3] == data[byte+3:byte+3+3]:
-            if run == maxrun:
-                run -= 1
-                run ^= 1 << 7
-                print byte
-                rle_buffer[byte] = run
-                rle_buffer[byte+1] = data[byte-3]
-                rle_buffer[byte+2] = data[byte-2]
-                rle_buffer[byte+3] = data[byte-1]
-                run = 1
-        while byte < IMG_SIZE and run < maxrun and data[byte:byte+3] != data[byte+3:byte+3+3]:
-            byte += 3
-            if data[byte:byte+3] != data[byte+3:byte+3+3]:
-                run += 1
-            if data[byte:byte+3] == data[byte+3:byte+3+3]:
-                if run == 1:
-                    run = 0
-                    rle_buffer[byte] = run
-                    rle_buffer[byte+1] = data[byte-3]
-                    rle_buffer[byte+2] = data[byte-2]
-                    rle_buffer[byte+3] = data[byte-1]
-                    run = 1
-                    break
-                else:
-                    run -= 1
-                    rle_buffer[byte] = run
-                    rle_buffer[byte+1] = data[byte-3]
-                    rle_buffer[byte+2] = data[byte-2]
-                    rle_buffer[byte+3] = data[byte-1]
-                    run = 1
-                    break
-        if data[byte:byte+3] != data[byte+3:byte+3+3]:
-            if run == maxrun:
-                run -= 1
-                rle_buffer[byte] = run
-                rle_buffer[byte+1] = data[byte-3]
-                rle_buffer[byte+2] = data[byte-2]
-                rle_buffer[byte+3] = data[byte-1]
-                run = 1
-    return rle_buffer
+                        if (zbuffer[p[X] + p[Y] * IMG_W] < p[Z]):
+                            zbuffer[p[X] + p[Y] * IMG_W] = p[Z]
+                            nd = direction * 255
+                            rgb = chr(int(nd))
+                            bgr = (rgb, rgb, rgb)
+                            set_pixel(data, p[X], p[Y], bgr)
+                    p[X] += 1
+                p[Y] += 1
 
 def main():
-    DATA = [chr(0)] * IMG_SIZE
+    DATA = [chr(0)]*IMG_SIZE
     ZBUFFER = [0]*IMG_SIZE
-    OBJ_DATA = {"v": [], "vt": [], "f": []}
-
+    OBJ_DATA = {
+        'v' : [], 
+        'vt': [], 
+        'f' : []
+    }
     parse_obj(OBJ_DATA)
-    #texture = load_non_rle_texture()
 
-    t = [Vec3(200,100), Vec3(600,600), Vec3(800,100)]
-    centroid = find_centroid(t)
-    m = m3x3_identity()
-    m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))
-    m = m3x3_concatenate(m, m3x3_rotate(degrees_to_radiants(30)))
-    m = m3x3_concatenate(m, m3x3_translate(-centroid[0], -centroid[1]))
-    t[0] = m3x3_mult_with_w1(m, t[0])
-    t[1] = m3x3_mult_with_w1(m, t[1])
-    t[2] = m3x3_mult_with_w1(m, t[2])
-    barycentric_raster_triangle(DATA, t[0], t[1], t[2])
-    show_bounding_box(DATA, t)
+    #texture = load_non_rle_texture()
+    #t = [Vec3(200,100), Vec3(600,600), Vec3(800,100)]
+    #centroid = find_centroid(t)
+    #m = m3x3_identity()
+    #m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))
+    #m = m3x3_concatenate(m, m3x3_rotate(degrees_to_radiants(30)))
+    #m = m3x3_concatenate(m, m3x3_translate(-centroid[0], -centroid[1]))
+    #t[0] = m3x3_mult_with_w1(m, t[0])
+    #t[1] = m3x3_mult_with_w1(m, t[1])
+    #t[2] = m3x3_mult_with_w1(m, t[2])
+    #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
+    #show_bounding_box(DATA, t)
 
     construct_model(DATA, ZBUFFER, OBJ_DATA)
 

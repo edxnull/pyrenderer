@@ -14,14 +14,14 @@ TEXTURE_IMG_W = 1024
 TEXTURE_IMG_H = 1024
 
 # NOTE: These colors are BGR not RGB!
-RED    = (0x00, 0x00, 0xff)
-BLUE   = (0xff, 0x00, 0x00)
-CYAN   = (0xff, 0xff, 0x00)
-GREEN  = (0x00, 0xff, 0x00)
-WHITE  = (0xff, 0xff, 0xff)
-BLACK  = (0x00, 0x00, 0x00)
-YELLOW = (0x00, 0xff, 0xff)
-VIOLET = (0xff, 0x00, 0xff)
+RED    = (chr(0x00), chr(0x00), chr(0xff))
+BLUE   = (chr(0xff), chr(0x00), chr(0x00))
+CYAN   = (chr(0xff), chr(0xff), chr(0x00))
+GREEN  = (chr(0x00), chr(0xff), chr(0x00))
+WHITE  = (chr(0xff), chr(0xff), chr(0xff))
+BLACK  = (chr(0x00), chr(0x00), chr(0x00))
+YELLOW = (chr(0x00), chr(0xff), chr(0xff))
+VIOLET = (chr(0xff), chr(0x00), chr(0xff))
 
 N_VERTS = 1258
 N_FACES = 2492
@@ -31,7 +31,6 @@ N_VT    = 1339
 # - fcross
 # - edge
 # - set pixel
-
 
 class Vec3:
     def __init__(self, x, y, z=0):
@@ -255,7 +254,7 @@ def barycentric_raster_triangle(data, p0, p1, p2):
         while (p.x < maxx):
             lambda1, lambda2, lambda3 = barycentric(p0, p1, p2, p)
             if ((lambda1 >= 0.0) and (lambda2 >= 0.0) and (lambda3 >= 0.0)):
-                c = (int(lambda1 * 255), int(lambda2 * 255), int(lambda3 * 255))
+                c = (chr(int(lambda1 * 255)), chr(int(lambda2 * 255)), chr(int(lambda3 * 255)))
                 set_pixel(data, int(p.x), int(p.y), c)
             p.x += 1
         p.y += 1
@@ -308,10 +307,9 @@ def find_centroid(t):
 def write_tga(filename, data):
         HEADER = struct.pack("<3b2hb4h2b", 0, 0, IMG_DSC_NON_RLE, 0, 0, 0, 0, 0, IMG_W, IMG_H, 24, 0)
         FOOTER = bytearray(8) + bytearray(b"TRUEVISION-.xFILE.") + bytearray(1)
-
         f = open(filename, "wb")
         f.write(HEADER)
-        f.write(data)
+        f.write("".join(data))
         f.write(FOOTER)
         f.close()
 
@@ -441,7 +439,7 @@ def construct_model(data, zbuffer, objdata, texture=None):
 
                         if (zbuffer[p.x + p.y * IMG_W] < p.z):
                             zbuffer[p.x + p.y * IMG_W] = p.z
-                            bgr = (int(direction * 255), int(direction * 255), int(direction * 255))
+                            bgr = (chr(int(direction * 255)), chr(int(direction * 255)), chr(int(direction * 255)))
                             set_pixel(data, p.x, p.y, bgr)
                     p.x += 1
                 p.y += 1
@@ -508,7 +506,7 @@ def rle_encode(data):
     return rle_buffer
 
 def main():
-    DATA = bytearray(IMG_SIZE)
+    DATA = [chr(0)] * IMG_SIZE
     ZBUFFER = [0]*IMG_SIZE
     OBJ_DATA = {"v": [], "vt": [], "f": []}
 

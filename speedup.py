@@ -9,6 +9,8 @@ IMG_DSC_NON_RLE = 2
 IMG_SIZE = IMG_W * IMG_H * IMG_BPP
 GREEN  = (chr(0x00), chr(0xff), chr(0x00))
 
+# TODO: test set_pixel through a handmade hash function!
+
 class Vec3:
     def __init__(self, x, y, z=0):
         self.x = int(x)
@@ -28,7 +30,7 @@ class Foo:
     def __repr__(self):
         return str((self.x, self.y, self.z))
 
-TIMES = 1999999
+TIMES = 999999
 
 def tuple_edge():
     a = tuple((2,7,2))
@@ -58,12 +60,39 @@ def list_edge():
     for x in xrange(TIMES):
         temp = (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0])
 
+def edgelist(a, b, c):
+    return (b[0] - a[0])*(c[1] - a[1])-(b[1] - a[1])*(c[0] - a[0])
+
+def list_edge_fn_call():
+    a = [2,7,2]
+    b = [2,7,2]
+    c = [2,7,2]
+    for x in xrange(TIMES):
+        temp = edgelist(a, b, c)
+
 def deque_edge():
     a = deque([2,7,2])
     b = deque([2,7,2])
     c = deque([2,7,2])
     for x in xrange(TIMES):
         temp = (b[0] - a[0])*(c[1] - a[1]) - (b[1] - a[1])*(c[0] - a[0])
+
+def int_edge():
+    a0, a1 = 2, 8
+    b0, b1 = 8, 7
+    c0, c1 = 3, 4
+    for x in xrange(TIMES):
+        temp = (b0 - a0)*(c1 - a1) - (b1 - a1)*(c0 - a0)
+
+def edge(a0, a1, b0, b1, c0, c1):
+    return (b0 - a0)*(c1 - a1) - (b1 - a1)*(c0 - a0)
+
+def int_edge_fn_call():
+    a0, a1 = 2, 8
+    b0, b1 = 8, 7
+    c0, c1 = 3, 4
+    for x in xrange(TIMES):
+        temp = edge(a0, a1, b0, b1, c0, c1)
 
 def slow_setpixel():
     x = 100
@@ -137,11 +166,27 @@ def try_speed_test():
         except ZeroDivisionError:
             a = 1+1
 
+def test_set_single_pixel():
+    leng = 9930000
+    data = [0x0]*leng
+    for x in range(leng):
+        data[x] = 1;
+
+def test_set_myltiple_pixels():
+    leng = 9930000
+    data = [0x0]*leng
+    data[0:leng] = range(0, leng);
+
 def main():
+    print "test_set_single_pixel", timeit.timeit(test_set_single_pixel, number=1)
+    print "test_set_myltiple_pixels", timeit.timeit(test_set_myltiple_pixels, number=1)
+    print "int_edge",  timeit.timeit(int_edge, number=1)
+    print "int_edge_fn_call",  timeit.timeit(int_edge, number=1)
+    print "list_edge",  timeit.timeit(list_edge, number=1)
+    print "list_edge_fn_call",  timeit.timeit(list_edge, number=1)
     print "tuple_edge",   timeit.timeit(tuple_edge, number=1)
     print "class_edge",  timeit.timeit(class_edge, number=1)
     print "slots_class_edge",  timeit.timeit(slots_class_edge, number=1)
-    print "list_edge",  timeit.timeit(list_edge, number=1)
     print "deque_edge",  timeit.timeit(deque_edge, number=1)
     print "slow_setpixel",  timeit.timeit(slow_setpixel, number=1)
     print "fast_setpixel",  timeit.timeit(fast_setpixel, number=1)

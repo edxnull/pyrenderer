@@ -1,5 +1,7 @@
 from __future__ import division
 
+import pdb
+import time
 import math
 import struct
 
@@ -27,23 +29,22 @@ N_VERTS = 1258
 N_FACES = 2492
 N_VT    = 1339
 
-#m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
-#m3x3 = [m11, m21, m31, m12, m22, m32, m13, m23, m33]
-#m3x3 = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-#map(float, m3x3)
-
 def m3x3_mult(m, v, w):
     m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
     vx = m[m11] * v[0] + m[m21] * v[1] + m[m31] * w
     vy = m[m12] * v[0] + m[m22] * v[1] + m[m32] * w
-    return map(float, [vx, vy, 0])
+    return [int(vx), int(vy), 0]
 
 def m3x3_mult_with_w1(m, v):
     return m3x3_mult(m, v, 1.0)
 
 def m3x3_concatenate(a, b):
     m = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-    m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
+
+    m11, m21, m31 = 0, 1, 2
+    m12, m22, m32 = 3, 4, 5
+    m13, m23, m33 = 5, 6, 7
+
     m[m11] = a[m11] * b[m11] + a[m21] * b[m12] + a[m31] * b[m13]
     m[m21] = a[m11] * b[m21] + a[m21] * b[m22] + a[m31] * b[m23]
     m[m31] = a[m11] * b[m31] + a[m21] * b[m32] + a[m31] * b[m33]
@@ -70,16 +71,16 @@ def m3x3_scale(sx, sy):
     return map(float, [sx, 0, 0, 0, sy, 0, 0, 0, 1])
 
 def m3x3_identity():
-    return map(float, [1,0,0, 0,1,0, 0,0,1])
+    return map(float, [1, 0, 0, 0, 1, 0, 0, 0, 1])
 
 def m3x3_reflect_about_origin():
-    return [-1,0,0, 0,-1,0, 0,0,1]
+    return map(float, [-1,0,0, 0,-1,0, 0,0,1])
 
 def m3x3_reflect_about_x_axis():
-    return [1,0,0, 0,-1,0, 0,0,1]
+    return map(float, [1,0,0, 0,-1,0, 0,0,1])
 
 def m3x3_reflect_about_y_axis():
-    return [-1,0,0, 0,1,0, 0,0,1]
+    return map(float, [-1,0,0, 0,1,0, 0,0,1])
 
 def set_pixel(data, x, y, color):
     s = (x + y * IMG_W) * IMG_BPP
@@ -160,19 +161,20 @@ def triangle(data, v0, v1, v2, color):
         currb += m2
         i += 1
 
-def barycentric(a, b, c, p):
-    try:
-        u = float(((b[1] - c[1]) * (p[0] - c[0]) + (c[0] - b[0]) * (p[1] - c[1])) / ((b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])))
-    except ZeroDivisionError:
-        print "exception got triggered"
-        u = float((b[1] - c[1]) * (p[0] - c[0]) + (c[0] - b[0]) * (p[1] - c[1]))
-    try:
-        v = float(((c[1] - a[1]) * (p[0] - c[0]) + (a[0] - c[0]) * (p[1] - c[1])) / ((b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])))
-    except ZeroDivisionError:
-        print "exception got triggered"
-        v = float((c[1] - a[1]) * (p[0] - c[0]) + (a[0] - c[0]) * (p[1] - c[1]))
+
+#TODO: TEST!!!!
+def faster_barycentric(a0, a1, b0, b1, c0, c1, p0, p1):
+    diff = (b1 - c1)*(a0 - c0) + (c0 - b0)*(a1 - c1)
+    u = float(((b1 - c1) * (p0 - c0) + (c0 - b0) * (p1 - c1)) / diff)
+    v = float(((c1 - a1) * (p0 - c0) + (a0 - c0) * (p1 - c1)) / diff)
     w = 1.0 - u - v
     return (u, v, w)
+
+def barycentric(a, b, c, p):
+	u = float(((b[1] - c[1]) * (p[0] - c[0]) + (c[0] - b[0]) * (p[1] - c[1])) / ((b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])))
+	v = float(((c[1] - a[1]) * (p[0] - c[0]) + (a[0] - c[0]) * (p[1] - c[1])) / ((b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])))
+	w = 1.0 - u - v
+	return (u, v, w)
 
 def barycentric_raster_triangle(data, p0, p1, p2):
     if p0[1] > p1[1]: p0, p1 = p1, p0
@@ -191,13 +193,13 @@ def barycentric_raster_triangle(data, p0, p1, p2):
 
     p = [minx, miny, 0]
     while (p[1] < maxy):
-        # NOTE!  when copying C for loops, we have to think about the init. phase in our Python loops as well.
         if (p[0] == maxx): p[0] = minx
         while (p[0] < maxx):
-            lambda1, lambda2, lambda3 = barycentric(p0, p1, p2, p)
+            #lambda1, lambda2, lambda3 = barycentric(p0, p1, p2, p)
+            lambda1, lambda2, lambda3 = faster_barycentric(p0[0], p0[1], p1[0], p1[1], p2[0], p2[1], p[0], p[1])
             if ((lambda1 >= 0.0) and (lambda2 >= 0.0) and (lambda3 >= 0.0)):
-                c = (chr(int(lambda1 * 255)), chr(int(lambda2 * 255)), chr(int(lambda3 * 255)))
-                set_pixel(data, int(p[0]), int(p[1]), c)
+                color = (chr(int(lambda1 * 255)), chr(int(lambda2 * 255)), chr(int(lambda3 * 255)))
+                set_pixel(data, int(p[0]), int(p[1]), color)
             p[0] += 1
         p[1] += 1
 
@@ -218,10 +220,14 @@ def bilinear(tx, ty, c00, c10, c01, c11):
     a = lerp(c10, tx, c11)
     return lerp(a, ty, b)
 
+# NOTE
+# I wonder if it would be possible to speed it up by passing a0, a1, b0, b1, c0, c1 instead of a, b, c
+# We've gained a 1s!
+def faster_edge(a0, a1, b0, b1, c0, c1):
+    return (b0 - a0)*(c1 - a1) - (b1 - a1)*(c0 - a0)
+
 def edge(a, b, c):
-    a0 = a[0]
-    a1 = a[1]
-    return (b[0] - a0)*(c[1] - a1) - (b[1] - a1)*(c[0] - a0)
+    return (b[0] - a[0])*(c[1] - a1) - (b[1] - a1)*(c[0] - a[0])
 
 def degrees_to_radiants(d):
     return (d * math.pi) / 180
@@ -238,7 +244,7 @@ def show_bounding_box(data, t):
 def find_centroid(t):
     tx = t[0][0] + t[1][0] + t[2][0]
     ty = t[0][1] + t[1][1] + t[2][1]
-    return (int(tx / 3), int(ty / 3))
+    return [int(tx / 3), int(ty / 3)]
 
 def write_tga(filename, data):
     HEADER = struct.pack("<3b2hb4h2b", 0, 0, IMG_DSC_NON_RLE, 0, 0, 0, 0, 0, IMG_W, IMG_H, 24, 0)
@@ -248,14 +254,6 @@ def write_tga(filename, data):
     f.write("".join(data))
     f.write(FOOTER)
     f.close()
-
-# NOTE! BYTE_ARRAYS ARE BAD
-def load_non_rle_texture():
-    f = open("obj/non_rle_texture.tga", "rb")
-    f.seek(18,0)
-    data = bytearray(f.read())
-    f.close()
-    return data
 
 def parse_obj(objdata):
     f = open("obj/african_head/african_head.obj", "r")
@@ -305,32 +303,21 @@ def construct_model(data, zbuffer, objdata, texture=None):
 
     X, Y, Z = 0, 1, 2
 
+    HALF_OF_IMG_W = IMG_W/2
+    HALF_OF_IMG_H = IMG_H/2
+
     for i in xrange(N_FACES):
         v0 = objdata['v'][objdata['f'][i][0]-1]
         v1 = objdata['v'][objdata['f'][i][3]-1]
         v2 = objdata['v'][objdata['f'][i][6]-1]
 
-        vt0 = objdata['vt'][objdata['f'][i][1]-1]
-        vt1 = objdata['vt'][objdata['f'][i][4]-1]
-        vt2 = objdata['vt'][objdata['f'][i][7]-1]
+        p0[0] = int((v0[0] + 1) * HALF_OF_IMG_W)
+        p0[1] = int((v0[1] + 1) * HALF_OF_IMG_H)
+        p1[0] = int((v1[0] + 1) * HALF_OF_IMG_W)
+        p1[1] = int((v1[1] + 1) * HALF_OF_IMG_H)
+        p2[0] = int((v2[0] + 1) * HALF_OF_IMG_W)
+        p2[1] = int((v2[1] + 1) * HALF_OF_IMG_H)
 
-        #uv0 = Vec3(vt0[0] * 1023, vt0[1] * 1023)
-        #uv1 = Vec3(vt1[0] * 1023, vt1[1] * 1023)
-        #uv2 = Vec3(vt2[0] * 1023, vt2[1] * 1023)
-
-        #uv0 = Vec3(vt0[0], vt0[1])
-        #uv1 = Vec3(vt1[0], vt1[1])
-        #uv2 = Vec3(vt2[0], vt2[1])
-
-        p0[0] = int((v0[0] + 1) * IMG_W/2)
-        p0[1] = int((v0[1] + 1) * IMG_H/2)
-        p1[0] = int((v1[0] + 1) * IMG_W/2)
-        p1[1] = int((v1[1] + 1) * IMG_H/2)
-        p2[0] = int((v2[0] + 1) * IMG_W/2)
-        p2[1] = int((v2[1] + 1) * IMG_H/2)
-
-        # NOTE: we should have the vertex normal information in our obj.
-        # I think that we don't need to calculate everything ourselves. We could just parse for that data.
         d1[0] = v1[0] - v0[0]
         d1[1] = v1[1] - v0[1]
         d1[2] = v1[2] - v0[2]
@@ -362,56 +349,63 @@ def construct_model(data, zbuffer, objdata, texture=None):
             maxy = min(maxy, IMG_H-1)
 
             p = [minx, miny, 0]
+            #NOTE: @SLOW!
             while (p[Y] < maxy):
-                # NOTE!  when copying C for loops, we have to think about the init. phase in our Python loops as well.
+            #for i in range(p[Y], maxy):
                 if (p[X] == maxx): p[X] = minx
                 while (p[X] < maxx):
-                    w0 = edge(p1, p2, p)
-                    w1 = edge(p2, p0, p)
-                    w2 = edge(p0, p1, p)
+                #for j in range(p[X], maxx):
+                    # p0, p1, p2 do not change here
+                    # NOTE: what if we don't save w0, w1, w2??? can we gain speed?
+                    if faster_edge(p1[0], p1[1], p2[0], p2[1], p[0], p[1]) >= 0:
+                        if faster_edge(p2[0], p2[1], p0[0], p0[1], p[0], p[1]) >= 0:
+                            if faster_edge(p0[0], p0[1], p1[0], p1[1], p[0], p[1]) >= 0:
+                            #if (faster_edge(p1[0], p1[1], p2[0], p2[1], p[0], p[1]) >= 0) and \
+                            #   (faster_edge(p2[0], p2[1], p0[0], p0[1], p[0], p[1]) >= 0) and \
+                            #   (faster_edge(p0[0], p0[1], p1[0], p1[1], p[0], p[1]) >= 0):
+                                p[Z] = 0.0
+                                p[Z] += v0[2] * p[X] + p[Y] * 3
+                                p[Z] += v1[2] * p[X] + p[Y] * 3
+                                p[Z] += v2[2] * p[X] + p[Y] * 3
 
-                    if ((w0 >= 0) and (w1 >= 0) and (w2 >= 0)):
-                        p[Z] = 0.0
-                        p[Z] += v0[2] * p[X] + p[Y] * 3
-                        p[Z] += v1[2] * p[X] + p[Y] * 3
-                        p[Z] += v2[2] * p[X] + p[Y] * 3
-
-                        if (zbuffer[p[X] + p[Y] * IMG_W] < p[Z]):
-                            zbuffer[p[X] + p[Y] * IMG_W] = p[Z]
-                            nd = direction * 255
-                            rgb = chr(int(nd))
-                            bgr = (rgb, rgb, rgb)
-                            set_pixel(data, p[X], p[Y], bgr)
+                                if (zbuffer[p[X] + p[Y] * IMG_W] < p[Z]):
+                                    zbuffer[p[X] + p[Y] * IMG_W] = p[Z]
+                                    #nd = direction * 255
+                                    #rgb = chr(int(nd))
+                                    #bgr = (rgb, rgb, rgb)
+                                    clr = chr(int(direction*255))
+                                    set_pixel(data, p[X], p[Y], (clr, clr, clr))
                     p[X] += 1
                 p[Y] += 1
 
 def main():
+    now = time.time()
+
     DATA = [chr(0)]*IMG_SIZE
     ZBUFFER = [0]*IMG_SIZE
-    OBJ_DATA = {
-        'v' : [], 
-        'vt': [], 
-        'f' : []
-    }
+    OBJ_DATA = {'v' : [], 'vt': [], 'f' : []}
+
     parse_obj(OBJ_DATA)
 
-    #texture = load_non_rle_texture()
-    t = [[100,300,0], [600,600,0], [800,100,0]]
+    #t = [[200,300,0], [400,700,0], [800,300,0]]
+    #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
+    construct_model(DATA, ZBUFFER, OBJ_DATA)
     #centroid = find_centroid(t)
     #m = m3x3_identity()
     #m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))
-    #m = m3x3_concatenate(m, m3x3_rotate(degrees_to_radiants(30)))
+    #m = m3x3_concatenate(m, m3x3_rotate(degrees_to_radiants(90)))
     #m = m3x3_concatenate(m, m3x3_translate(-centroid[0], -centroid[1]))
     #t[0] = m3x3_mult_with_w1(m, t[0])
     #t[1] = m3x3_mult_with_w1(m, t[1])
     #t[2] = m3x3_mult_with_w1(m, t[2])
-    construct_model(DATA, ZBUFFER, OBJ_DATA)
-    barycentric_raster_triangle(DATA, t[0], t[1], t[2])
+    #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
     #show_bounding_box(DATA, t)
-
 
     # TODO: NOT IMPLEMENTED!  #RLE_DATA = rle_encode(DATA[0:(int(IMG_SIZE/2))])
     write_tga("test_rle.tga", DATA)
+
+    end = time.time()
+    print "ellapsed time " + str((end - now))
 
 if __name__ == "__main__":
     main()

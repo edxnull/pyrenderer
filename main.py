@@ -223,6 +223,7 @@ def bilinear(tx, ty, c00, c10, c01, c11):
 # NOTE
 # I wonder if it would be possible to speed it up by passing a0, a1, b0, b1, c0, c1 instead of a, b, c
 # We've gained a 1s!
+
 def faster_edge(a0, a1, b0, b1, c0, c1):
     return (b0 - a0)*(c1 - a1) - (b1 - a1)*(c0 - a0)
 
@@ -351,18 +352,11 @@ def construct_model(data, zbuffer, objdata, texture=None):
             p = [minx, miny, 0]
             #NOTE: @SLOW!
             while (p[Y] < maxy):
-            #for i in range(p[Y], maxy):
                 if (p[X] == maxx): p[X] = minx
                 while (p[X] < maxx):
-                #for j in range(p[X], maxx):
-                    # p0, p1, p2 do not change here
-                    # NOTE: what if we don't save w0, w1, w2??? can we gain speed?
                     if faster_edge(p1[0], p1[1], p2[0], p2[1], p[0], p[1]) >= 0:
                         if faster_edge(p2[0], p2[1], p0[0], p0[1], p[0], p[1]) >= 0:
                             if faster_edge(p0[0], p0[1], p1[0], p1[1], p[0], p[1]) >= 0:
-                            #if (faster_edge(p1[0], p1[1], p2[0], p2[1], p[0], p[1]) >= 0) and \
-                            #   (faster_edge(p2[0], p2[1], p0[0], p0[1], p[0], p[1]) >= 0) and \
-                            #   (faster_edge(p0[0], p0[1], p1[0], p1[1], p[0], p[1]) >= 0):
                                 p[Z] = 0.0
                                 p[Z] += v0[2] * p[X] + p[Y] * 3
                                 p[Z] += v1[2] * p[X] + p[Y] * 3
@@ -389,8 +383,8 @@ def main():
 
     #t = [[200,300,0], [400,700,0], [800,300,0]]
     #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
-    #construct_model(DATA, ZBUFFER, OBJ_DATA)
-    wireframe_render_model(DATA, OBJ_DATA)
+    construct_model(DATA, ZBUFFER, OBJ_DATA)
+    #wireframe_render_model(DATA, OBJ_DATA)
     #centroid = find_centroid(t)
     #m = m3x3_identity()
     #m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))

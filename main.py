@@ -274,24 +274,24 @@ def parse_obj(objdata):
             objdata['f'].append(t)
 
 def wireframe_render_model(data, objdata, color=WHITE):
-    p0 = Vec3(0, 0, 0)
-    p1 = Vec3(0, 0, 0)
-    p2 = Vec3(0, 0, 0)
+    p0 = [0, 0, 0]
+    p1 = [0, 0, 0]
+    p2 = [0, 0, 0]
     for i in xrange(N_FACES):
         v0 = objdata['v'][objdata['f'][i][0]-1]
         v1 = objdata['v'][objdata['f'][i][3]-1]
         v2 = objdata['v'][objdata['f'][i][6]-1]
 
-        p0.x = int((v0[0] + 1) * IMG_W/2)
-        p0.y = int((v0[1] + 1) * IMG_H/2)
-        p1.x = int((v1[0] + 1) * IMG_W/2)
-        p1.y = int((v1[1] + 1) * IMG_H/2)
-        p2.x = int((v2[0] + 1) * IMG_W/2)
-        p2.y = int((v2[1] + 1) * IMG_H/2)
+        p0[0] = int((v0[0] + 1) * IMG_W/2)
+        p0[1] = int((v0[1] + 1) * IMG_H/2)
+        p1[0] = int((v1[0] + 1) * IMG_W/2)
+        p1[1] = int((v1[1] + 1) * IMG_H/2)
+        p2[0] = int((v2[0] + 1) * IMG_W/2)
+        p2[1] = int((v2[1] + 1) * IMG_H/2)
 
-        line(data, p0.x, p0.y, p1.x, p1.y, color)
-        line(data, p1.x, p1.y, p2.x, p2.y, color)
-        line(data, p2.x, p2.y, p0.x, p0.y, color)
+        line(data, p0[0], p0[1], p1[0], p1[1], color)
+        line(data, p1[0], p1[1], p2[0], p2[1], color)
+        line(data, p2[0], p2[1], p0[0], p0[1], color)
 
 def construct_model(data, zbuffer, objdata, texture=None):
     p0 = [0, 0, 0]
@@ -389,7 +389,8 @@ def main():
 
     #t = [[200,300,0], [400,700,0], [800,300,0]]
     #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
-    construct_model(DATA, ZBUFFER, OBJ_DATA)
+    #construct_model(DATA, ZBUFFER, OBJ_DATA)
+    wireframe_render_model(DATA, OBJ_DATA)
     #centroid = find_centroid(t)
     #m = m3x3_identity()
     #m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))

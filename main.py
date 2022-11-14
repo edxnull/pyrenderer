@@ -16,23 +16,27 @@ TEXTURE_IMG_W = 1024
 TEXTURE_IMG_H = 1024
 
 # NOTE: These colors are BGR not RGB!
-RED    = (chr(0x00), chr(0x00), chr(0xff))
-BLUE   = (chr(0xff), chr(0x00), chr(0x00))
-CYAN   = (chr(0xff), chr(0xff), chr(0x00))
-GREEN  = (chr(0x00), chr(0xff), chr(0x00))
-WHITE  = (chr(0xff), chr(0xff), chr(0xff))
-BLACK  = (chr(0x00), chr(0x00), chr(0x00))
-YELLOW = (chr(0x00), chr(0xff), chr(0xff))
-VIOLET = (chr(0xff), chr(0x00), chr(0xff))
+RED    = (0x00, 0x00, 0xff)
+BLUE   = (0xff, 0x00, 0x00)
+CYAN   = (0xff, 0xff, 0x00)
+GREEN  = (0x00, 0xff, 0x00)
+WHITE  = (0xff, 0xff, 0xff)
+BLACK  = (0x00, 0x00, 0x00)
+YELLOW = (0x00, 0xff, 0xff)
+VIOLET = (0xff, 0x00, 0xff)
 
 N_VERTS = 1258
 N_FACES = 2492
 N_VT    = 1339
 
 def m3x3_mult(m, v, w):
-    m11, m21, m31, m12, m22, m32, m13, m23, m33 = 0, 1, 2, 3, 4, 5, 6, 7, 8
+    m11, m21, m31 = 0, 1, 2
+    m12, m22, m32 = 3, 4, 5
+    m13, m23, m33 = 6, 7, 8
+
     vx = m[m11] * v[0] + m[m21] * v[1] + m[m31] * w
     vy = m[m12] * v[0] + m[m22] * v[1] + m[m32] * w
+
     return [int(vx), int(vy), 0]
 
 def m3x3_mult_with_w1(m, v):
@@ -57,34 +61,34 @@ def m3x3_concatenate(a, b):
     m[m23] = a[m13] * b[m21] + a[m23] * b[m22] + a[m33] * b[m23]
     m[m33] = a[m13] * b[m31] + a[m23] * b[m32] + a[m33] * b[m33]
 
-    return map(float, m)
+    return list(map(float, m))
 
 def m3x3_translate(tx, ty):
-    return map(float, [1, 0, tx, 0, 1, ty, 0, 0, 1])
+    return list(map(float, [1, 0, tx, 0, 1, ty, 0, 0, 1]))
 
 def m3x3_rotate(theta):
     cost = math.cos(theta)
     sint = math.sin(theta)
-    return map(float, [cost, -sint, 0, sint, cost, 0, 0, 0, 1])
+    return list(map(float, [cost, -sint, 0, sint, cost, 0, 0, 0, 1]))
 
 def m3x3_scale(sx, sy):
-    return map(float, [sx, 0, 0, 0, sy, 0, 0, 0, 1])
+    return list(map(float, [sx, 0, 0, 0, sy, 0, 0, 0, 1]))
 
 def m3x3_identity():
-    return map(float, [1, 0, 0, 0, 1, 0, 0, 0, 1])
+    return list(map(float, [1, 0, 0, 0, 1, 0, 0, 0, 1]))
 
 def m3x3_reflect_about_origin():
-    return map(float, [-1,0,0, 0,-1,0, 0,0,1])
+    return list(map(float, [-1,0,0, 0,-1,0, 0,0,1]))
 
 def m3x3_reflect_about_x_axis():
-    return map(float, [1,0,0, 0,-1,0, 0,0,1])
+    return list(map(float, [1,0,0, 0,-1,0, 0,0,1]))
 
 def m3x3_reflect_about_y_axis():
-    return map(float, [-1,0,0, 0,1,0, 0,0,1])
+    return list(map(float, [-1,0,0, 0,1,0, 0,0,1]))
 
 def set_pixel(data, x, y, color):
     s = (x + y * IMG_W) * IMG_BPP
-    data[s:s+3] = color
+    data[s:s+3] = color[0], color[1], color[2]
 
 def line(data, x0, y0, x1, y1, color):
     dx = abs(x1 - x0)
@@ -118,7 +122,7 @@ def triangle(data, v0, v1, v2, color):
     try:
         t = (v1[Y] - v0[Y]) / (v2[Y] - v0[Y])
     except ZeroDivisionError:
-        print "exception got triggered"
+        print("exception got triggered")
         t = (v1[Y] - v0[Y])
 
     v4[X] = v0[X] + t * (v2[X] - v0[X])
@@ -128,7 +132,7 @@ def triangle(data, v0, v1, v2, color):
         m1 = (v2[X] - v0[X]) / (v2[Y] - v0[Y])
         m2 = (v1[X] - v0[X]) / (v1[Y] - v0[Y])
     except ZeroDivisionError:
-        print "exception got triggered"
+        print("exception got triggered")
         m1 = (v2[X] - v0[X])
         m2 = (v1[X] - v0[X])
 
@@ -146,7 +150,7 @@ def triangle(data, v0, v1, v2, color):
         m1 = (v2[X] - v4[X]) / (v2[Y] - v4[Y])
         m2 = (v2[X] - v1[X]) / (v2[Y] - v1[Y])
     except ZeroDivisionError:
-        print "exception got triggered"
+        print("exception got triggered")
         m1 = (v2[X] - v4[X])
         m2 = (v2[X] - v1[X])
 
@@ -161,8 +165,6 @@ def triangle(data, v0, v1, v2, color):
         currb += m2
         i += 1
 
-
-#TODO: TEST!!!!
 def faster_barycentric(a0, a1, b0, b1, c0, c1, p0, p1):
     diff = (b1 - c1)*(a0 - c0) + (c0 - b0)*(a1 - c1)
     u = float(((b1 - c1) * (p0 - c0) + (c0 - b0) * (p1 - c1)) / diff)
@@ -195,10 +197,9 @@ def barycentric_raster_triangle(data, p0, p1, p2):
     while (p[1] < maxy):
         if (p[0] == maxx): p[0] = minx
         while (p[0] < maxx):
-            #lambda1, lambda2, lambda3 = barycentric(p0, p1, p2, p)
             lambda1, lambda2, lambda3 = faster_barycentric(p0[0], p0[1], p1[0], p1[1], p2[0], p2[1], p[0], p[1])
             if ((lambda1 >= 0.0) and (lambda2 >= 0.0) and (lambda3 >= 0.0)):
-                color = (chr(int(lambda1 * 255)), chr(int(lambda2 * 255)), chr(int(lambda3 * 255)))
+                color = (int(lambda1 * 255), int(lambda2 * 255), int(lambda3 * 255))
                 set_pixel(data, int(p[0]), int(p[1]), color)
             p[0] += 1
         p[1] += 1
@@ -222,7 +223,7 @@ def bilinear(tx, ty, c00, c10, c01, c11):
 
 # NOTE
 # I wonder if it would be possible to speed it up by passing a0, a1, b0, b1, c0, c1 instead of a, b, c
-# We've gained a 1s!
+# We've gained 1s!
 
 def faster_edge(a0, a1, b0, b1, c0, c1):
     return (b0 - a0)*(c1 - a1) - (b1 - a1)*(c0 - a0)
@@ -252,16 +253,16 @@ def write_tga(filename, data):
     FOOTER = bytearray(8) + bytearray(b"TRUEVISION-.xFILE.") + bytearray(1)
     f = open(filename, "wb")
     f.write(HEADER)
-    f.write("".join(data))
+    f.write(data)
     f.write(FOOTER)
     f.close()
 
 def parse_obj(objdata):
-    f = open("obj/african_head/african_head.obj", "r")
+    f = open("obj/face.obj", "r")
     data = f.read()
     f.close()
     data = data.split("\n")
-    for line in xrange(len(data)):
+    for line in range(len(data)):
         split_data = data[line].split(" ")
         if split_data[0] == 'v':
             objdata['v'].append([float(element) for element in split_data[1::]])
@@ -269,7 +270,7 @@ def parse_obj(objdata):
             objdata['vt'].append([float(element) for element in split_data[2::]])
         if split_data[0] == 'f':
             t = []
-            for i in xrange(3):
+            for i in range(3):
                 for element in split_data[i+1].split("/"):
                     t.append(int(element))
             objdata['f'].append(t)
@@ -278,7 +279,7 @@ def wireframe_render_model(data, objdata, color=WHITE):
     p0 = [0, 0, 0]
     p1 = [0, 0, 0]
     p2 = [0, 0, 0]
-    for i in xrange(N_FACES):
+    for i in range(N_FACES):
         v0 = objdata['v'][objdata['f'][i][0]-1]
         v1 = objdata['v'][objdata['f'][i][3]-1]
         v2 = objdata['v'][objdata['f'][i][6]-1]
@@ -307,7 +308,7 @@ def construct_model(data, zbuffer, objdata, texture=None):
     HALF_OF_IMG_W = IMG_W/2
     HALF_OF_IMG_H = IMG_H/2
 
-    for i in xrange(N_FACES):
+    for i in range(N_FACES):
         v0 = objdata['v'][objdata['f'][i][0]-1]
         v1 = objdata['v'][objdata['f'][i][3]-1]
         v2 = objdata['v'][objdata['f'][i][6]-1]
@@ -365,9 +366,9 @@ def construct_model(data, zbuffer, objdata, texture=None):
                                 if (zbuffer[p[X] + p[Y] * IMG_W] < p[Z]):
                                     zbuffer[p[X] + p[Y] * IMG_W] = p[Z]
                                     #nd = direction * 255
-                                    #rgb = chr(int(nd))
+                                    #rgb = int(nd)
                                     #bgr = (rgb, rgb, rgb)
-                                    clr = chr(int(direction*255))
+                                    clr = int(direction*255)
                                     set_pixel(data, p[X], p[Y], (clr, clr, clr))
                     p[X] += 1
                 p[Y] += 1
@@ -375,17 +376,17 @@ def construct_model(data, zbuffer, objdata, texture=None):
 def main():
     now = time.time()
 
-    DATA = [chr(0)]*IMG_SIZE
+    DATA = bytearray(IMG_SIZE)
     ZBUFFER = [0]*IMG_SIZE
     OBJ_DATA = {'v' : [], 'vt': [], 'f' : []}
 
     parse_obj(OBJ_DATA)
 
-    #t = [[200,300,0], [400,700,0], [800,300,0]]
-    #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
+    t = [[200,300,0], [400,700,0], [800,300,0]]
+    barycentric_raster_triangle(DATA, t[0], t[1], t[2])
     construct_model(DATA, ZBUFFER, OBJ_DATA)
     #wireframe_render_model(DATA, OBJ_DATA)
-    #centroid = find_centroid(t)
+    centroid = find_centroid(t)
     #m = m3x3_identity()
     #m = m3x3_concatenate(m, m3x3_translate(centroid[0], centroid[1]))
     #m = m3x3_concatenate(m, m3x3_rotate(degrees_to_radiants(90)))
@@ -393,14 +394,13 @@ def main():
     #t[0] = m3x3_mult_with_w1(m, t[0])
     #t[1] = m3x3_mult_with_w1(m, t[1])
     #t[2] = m3x3_mult_with_w1(m, t[2])
-    #barycentric_raster_triangle(DATA, t[0], t[1], t[2])
-    #show_bounding_box(DATA, t)
+    barycentric_raster_triangle(DATA, t[0], t[1], t[2])
+    show_bounding_box(DATA, t)
 
-    # TODO: NOT IMPLEMENTED!  #RLE_DATA = rle_encode(DATA[0:(int(IMG_SIZE/2))])
-    write_tga("test_rle.tga", DATA)
+    write_tga("image.tga", DATA)
 
     end = time.time()
-    print "ellapsed time " + str((end - now))
+    print("ellapsed time " + str((end - now)))
 
 if __name__ == "__main__":
     main()
